@@ -1,0 +1,99 @@
+~ Web Page Generator in SlayScript
+~ Demonstrates HTML/CSS generation magic
+
+scribe_line("=== SlayScript Web Conjurer ===")
+scribe_line("Weaving HTML and CSS with magic...")
+scribe_line("")
+
+~ Create the canvas (HTML document)
+conjure page as conjure_canvas("The Slayer's Codex")
+
+~ Add styles
+conjure body_style as enchant_style("body", grimoire {
+    "font-family": "'Segoe UI', Tahoma, sans-serif",
+    "background": "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
+    "color": "#eee",
+    "margin": "0",
+    "padding": "40px",
+    "min-height": "100vh"
+})
+add_style_to_canvas(page, body_style)
+
+conjure header_style as enchant_style("h1", grimoire {
+    "color": "#e94560",
+    "text-shadow": "2px 2px 4px rgba(0,0,0,0.5)",
+    "border-bottom": "2px solid #e94560",
+    "padding-bottom": "10px"
+})
+add_style_to_canvas(page, header_style)
+
+conjure card_style as enchant_style(".card", grimoire {
+    "background": "rgba(255,255,255,0.1)",
+    "border-radius": "10px",
+    "padding": "20px",
+    "margin": "20px 0",
+    "backdrop-filter": "blur(10px)"
+})
+add_style_to_canvas(page, card_style)
+
+conjure list_style as enchant_style("ul", grimoire {
+    "list-style-type": "none",
+    "padding": "0"
+})
+add_style_to_canvas(page, list_style)
+
+conjure list_item_style as enchant_style("li", grimoire {
+    "padding": "10px 0",
+    "border-bottom": "1px solid rgba(255,255,255,0.1)"
+})
+add_style_to_canvas(page, list_item_style)
+
+conjure link_style as enchant_style("a", grimoire {
+    "color": "#e94560",
+    "text-decoration": "none"
+})
+add_style_to_canvas(page, link_style)
+
+~ Create header
+conjure header as enchant_element("h1", "The Slayer's Codex", grimoire {})
+append_to_canvas(page, header)
+
+conjure subtitle as enchant_element("p", "A guide to supernatural programming", grimoire {})
+append_to_canvas(page, subtitle)
+
+~ Create a card with spell list
+conjure spells_title as enchant_element("h2", "Essential Spells", grimoire {})
+append_to_canvas(page, spells_title)
+
+~ Build spell list dynamically
+conjure spells as tome [
+    "conjure - Summon variables into existence",
+    "transmute - Transform variable values",
+    "spell - Define reusable incantations",
+    "prophecy reveals - Conditional magic",
+    "hunt each - Iterate through collections"
+]
+
+conjure spell_items as tome []
+hunt each entry in spells {
+    conjure item as enchant_element("li", entry, grimoire {})
+    append(spell_items, item)
+}
+
+conjure spell_list as enchant_element("ul", spell_items, grimoire {})
+conjure spell_card as enchant_element("div", spell_list, grimoire {"class": "card"})
+append_to_canvas(page, spell_card)
+
+~ Add footer
+conjure footer as enchant_element("p", "Crafted with SlayScript - Cast spells, slay bugs.", grimoire {})
+append_to_canvas(page, footer)
+
+~ Generate and save the page
+conjure filename as "slayer_codex.html"
+scribe_page(page, filename)
+scribe_line("Page woven successfully: " + filename)
+
+~ Open in browser
+scribe_line("Summoning browser...")
+summon_browser(filename)
+scribe_line("Done! The codex awaits.")

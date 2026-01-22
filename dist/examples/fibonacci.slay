@@ -1,0 +1,49 @@
+~ Fibonacci sequence in SlayScript
+~ Demonstrating recursion and loops
+
+scribe_line("=== Fibonacci Sequence ===")
+scribe_line("")
+
+~ Recursive spell
+spell fibonacci_recursive(n) {
+    prophecy reveals n atmost 1 {
+        cast n
+    }
+    fate decrees {
+        cast fibonacci_recursive(n - 1) + fibonacci_recursive(n - 2)
+    }
+}
+
+~ Iterative spell (more efficient)
+spell fibonacci_iterative(n) {
+    prophecy reveals n atmost 1 {
+        cast n
+    }
+
+    conjure a as 0
+    conjure b as 1
+    conjure i as 2
+
+    patrol until i exceeds n {
+        conjure temp as a + b
+        transmute a as b
+        transmute b as temp
+        transmute i as i + 1
+    }
+
+    cast b
+}
+
+~ Generate first 10 Fibonacci numbers using iteration
+scribe_line("First 10 Fibonacci numbers (iterative):")
+conjure numbers as tome []
+hunt each i in range(10) {
+    append(numbers, fibonacci_iterative(i))
+}
+scribe_line(numbers)
+
+scribe_line("")
+
+~ Test recursive version for smaller values
+scribe_line("Fibonacci(7) recursive: " + transform_to_scroll(fibonacci_recursive(7)))
+scribe_line("Fibonacci(7) iterative: " + transform_to_scroll(fibonacci_iterative(7)))

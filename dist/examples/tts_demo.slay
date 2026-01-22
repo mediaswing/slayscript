@@ -1,0 +1,51 @@
+~ Text-to-Speech Demo in SlayScript
+~ Demonstrates voice magic capabilities
+
+scribe_line("=== SlayScript Voice Magic Demo ===")
+scribe_line("Note: Requires pyttsx3 to be installed")
+scribe_line("")
+
+~ Basic speech
+scribe_line("Casting speak_spell...")
+speak_spell("Hello, I am the voice of SlayScript.")
+
+slumber(1)
+
+~ Whisper
+scribe_line("Casting whisper_spell...")
+whisper_spell("This is a whispered secret message.")
+
+slumber(1)
+
+~ Shout
+scribe_line("Casting shout_spell...")
+shout_spell("The Slayer awakens!")
+
+slumber(1)
+
+~ Fun with incantations (auto-speaking functions)
+scribe_line("")
+scribe_line("Defining an incantation (auto-speaking spell)...")
+
+incantation announce_vampire(name) {
+    cast "Warning! " + name + " has been detected nearby!"
+}
+
+~ When called, this will automatically speak its return value
+scribe_line("Calling the incantation...")
+announce_vampire("Angel")
+
+slumber(1)
+
+~ Interactive speech
+scribe_line("")
+conjure user_message as prophecy_input("Enter a message to speak: ")
+prophecy reveals measure(user_message) exceeds 0 {
+    speak_spell(user_message)
+}
+fate decrees {
+    speak_spell("You didn't enter anything!")
+}
+
+scribe_line("")
+scribe_line("Voice magic demonstration complete!")

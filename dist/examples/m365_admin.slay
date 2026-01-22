@@ -1,0 +1,178 @@
+~ Microsoft 365 / Entra ID Administration Example
+~ Demonstrates enterprise administration capabilities
+~
+~ SETUP REQUIRED:
+~ 1. Create an App Registration in Azure AD (Entra ID)
+~ 2. Grant these Microsoft Graph API permissions (Application type):
+~    - User.ReadWrite.All
+~    - Group.ReadWrite.All
+~    - Directory.ReadWrite.All
+~    - Organization.Read.All
+~ 3. Create a client secret
+~ 4. Update the credentials below
+
+scribe_line("=== SlayScript M365 Administration ===")
+scribe_line("Managing the Azure Realm with magic!")
+scribe_line("")
+
+~ ============================================
+~ CONFIGURATION - Update these values!
+~ ============================================
+conjure TENANT_ID as "your-tenant-id"
+conjure CLIENT_ID as "your-client-id"
+conjure CLIENT_SECRET as "your-client-secret"
+
+~ Check if credentials are configured
+prophecy reveals TENANT_ID is "your-tenant-id" {
+    scribe_line("ERROR: Please update the credentials in this file!")
+    scribe_line("")
+    scribe_line("You need to:")
+    scribe_line("1. Register an app in Azure AD (Entra ID)")
+    scribe_line("2. Grant Microsoft Graph API permissions")
+    scribe_line("3. Create a client secret")
+    scribe_line("4. Update TENANT_ID, CLIENT_ID, and CLIENT_SECRET above")
+}
+fate decrees {
+    ~ Connect to Azure
+    scribe_line("Summoning Azure Realm...")
+    conjure realm as summon_azure_realm(TENANT_ID, CLIENT_ID, CLIENT_SECRET)
+    scribe_line("Connected to Azure!")
+    scribe_line("")
+
+    ~ ============================================
+    ~ Organization Info
+    ~ ============================================
+    scribe_line("--- Organization Info ---")
+    conjure org as divine_organization()
+    scribe_line("Tenant: " + org["displayName"])
+    scribe_line("")
+
+    ~ ============================================
+    ~ List Domains
+    ~ ============================================
+    scribe_line("--- Domains ---")
+    conjure domains as divine_domains()
+    hunt each domain in domains {
+        conjure verified as ""
+        prophecy reveals domain["isVerified"] is true {
+            transmute verified as " (verified)"
+        }
+        scribe_line("  " + domain["id"] + verified)
+    }
+    scribe_line("")
+
+    ~ ============================================
+    ~ List Users (first 10)
+    ~ ============================================
+    scribe_line("--- Users (first 10) ---")
+    conjure users as divine_users(10)
+    hunt each user in users {
+        conjure status as "enabled"
+        prophecy reveals user["accountEnabled"] is false {
+            transmute status as "DISABLED"
+        }
+        scribe_line("  " + user["displayName"] + " <" + user["userPrincipalName"] + "> [" + status + "]")
+    }
+    scribe_line("")
+
+    ~ ============================================
+    ~ List Groups (first 10)
+    ~ ============================================
+    scribe_line("--- Groups (first 10) ---")
+    conjure groups as divine_groups(10)
+    hunt each group in groups {
+        conjure group_type as "Security"
+        prophecy reveals group["mailEnabled"] is true {
+            transmute group_type as "Mail-enabled"
+        }
+        scribe_line("  " + group["displayName"] + " [" + group_type + "]")
+    }
+    scribe_line("")
+
+    ~ ============================================
+    ~ List Available Licenses
+    ~ ============================================
+    scribe_line("--- Available Licenses ---")
+    conjure licenses as divine_licenses()
+    hunt each lic in licenses {
+        conjure consumed as transform_to_scroll(lic["consumedUnits"])
+        conjure total as "unlimited"
+        prophecy reveals lic["prepaidUnits"]["enabled"] exceeds 0 {
+            transmute total as transform_to_scroll(lic["prepaidUnits"]["enabled"])
+        }
+        scribe_line("  " + lic["skuPartNumber"] + ": " + consumed + "/" + total + " used")
+    }
+    scribe_line("")
+
+    ~ ============================================
+    ~ List Directory Roles
+    ~ ============================================
+    scribe_line("--- Active Directory Roles ---")
+    conjure roles as divine_roles()
+    hunt each role in roles {
+        scribe_line("  " + role["displayName"])
+    }
+    scribe_line("")
+
+    ~ ============================================
+    ~ Example: Create and manage a user (commented out)
+    ~ ============================================
+    ~~
+    ~ Uncomment to create a test user:
+    scribe_line("Creating test user...")
+    conjure new_user as conjure_user(
+        "Test Slayer",
+        "testslayer",
+        "testslayer@yourdomain.com",
+        "TempPassword123!"
+    )
+    scribe_line("Created user: " + new_user["id"])
+
+    ~ Disable the user
+    silence_user(new_user["id"])
+    scribe_line("User disabled")
+
+    ~ Re-enable the user
+    awaken_user(new_user["id"])
+    scribe_line("User enabled")
+
+    ~ Delete the user
+    vanquish_user(new_user["id"])
+    scribe_line("User deleted")
+    ~~
+
+    ~ ============================================
+    ~ Example: Create and manage a group (commented out)
+    ~ ============================================
+    ~~
+    ~ Uncomment to create a test group:
+    scribe_line("Creating test group...")
+    conjure new_group as conjure_group(
+        "Slayers Security Group",
+        "slayers-sg",
+        "A group for vampire slayers"
+    )
+    scribe_line("Created group: " + new_group["id"])
+
+    ~ Add a user to the group
+    bind_to_group(new_group["id"], "user-id-here")
+
+    ~ List group members
+    conjure members as divine_group_members(new_group["id"])
+    scribe_line("Group members: " + transform_to_scroll(measure(members)))
+
+    ~ Remove user from group
+    unbind_from_group(new_group["id"], "user-id-here")
+
+    ~ Delete the group
+    vanquish_group(new_group["id"])
+    scribe_line("Group deleted")
+    ~~
+
+    ~ Disconnect
+    banish_azure_realm()
+    scribe_line("Disconnected from Azure Realm")
+}
+
+scribe_line("")
+scribe_line("M365 Administration complete!")

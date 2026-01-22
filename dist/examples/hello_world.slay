@@ -1,0 +1,21 @@
+~ Hello World in SlayScript
+~ The classic first program, Slayer-style
+
+scribe_line("Hello, World!")
+scribe_line("Welcome to SlayScript - Cast spells, slay bugs!")
+
+~ Variable demonstration
+conjure slayer as "Buffy"
+conjure weapon as "stake"
+
+scribe_line("")
+scribe_line(slayer + " grabs her " + weapon + " and prepares for battle.")
+
+~ Using different data types
+conjure vampires_slain as rune 42
+conjure success_rate as potion 98.5
+conjure is_ready as charm true
+
+scribe_line("")
+scribe_line("Vampires slain: " + transform_to_scroll(vampires_slain))
+scribe_line("Success rate: " + transform_to_scroll(success_rate) + "%")

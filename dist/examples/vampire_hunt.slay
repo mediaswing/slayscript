@@ -1,0 +1,99 @@
+~ Vampire Hunt - A text adventure in SlayScript
+~ Demonstrating control flow, data structures, and randomness
+
+scribe_line("========================================")
+scribe_line("   VAMPIRE HUNT: A SlayScript Adventure")
+scribe_line("========================================")
+scribe_line("")
+
+~ Game state
+conjure player_health as 100
+conjure vampires_remaining as 5
+conjure stakes as 3
+conjure holy_water as 2
+
+~ Vampire types with difficulty
+conjure vampire_types as grimoire {
+    "Fledgling": 20,
+    "Minion": 35,
+    "Elder": 50,
+    "Master": 75
+}
+
+~ Generate a random vampire
+spell spawn_vampire() {
+    conjure roll as random_fate(1, 100)
+    prophecy reveals roll under 40 {
+        cast "Fledgling"
+    }
+    otherwise prophecy roll under 70 {
+        cast "Minion"
+    }
+    otherwise prophecy roll under 90 {
+        cast "Elder"
+    }
+    fate decrees {
+        cast "Master"
+    }
+}
+
+~ Combat spell
+spell fight_vampire(vamp_type) {
+    conjure vamp_power as vampire_types[vamp_type]
+    conjure player_roll as random_fate(1, 100)
+
+    scribe_line("  Your combat roll: " + transform_to_scroll(player_roll))
+    scribe_line("  Vampire power: " + transform_to_scroll(vamp_power))
+
+    prophecy reveals player_roll exceeds vamp_power {
+        scribe_line("  Victory! The " + vamp_type + " is dust!")
+        cast true
+    }
+    fate decrees {
+        conjure damage as random_fate(10, 25)
+        scribe_line("  The vampire strikes back! You take " + transform_to_scroll(damage) + " damage.")
+        cast damage
+    }
+}
+
+~ Main game loop
+scribe_line("You are the Slayer. " + transform_to_scroll(vampires_remaining) + " vampires lurk in the cemetery.")
+scribe_line("Inventory: " + transform_to_scroll(stakes) + " stakes, " + transform_to_scroll(holy_water) + " holy water")
+scribe_line("")
+
+patrol until vampires_remaining is 0 {
+    ~ Check player health
+    prophecy reveals player_health atmost 0 {
+        scribe_line("")
+        scribe_line("You have fallen. The darkness wins tonight...")
+        break
+    }
+
+    scribe_line("---")
+    scribe_line("Health: " + transform_to_scroll(player_health) + " | Vampires: " + transform_to_scroll(vampires_remaining))
+
+    ~ Spawn and encounter vampire
+    conjure current_vampire as spawn_vampire()
+    scribe_line("")
+    scribe_line("A " + current_vampire + " vampire emerges from the shadows!")
+
+    ~ Combat
+    conjure result as fight_vampire(current_vampire)
+
+    prophecy reveals result is true {
+        transmute vampires_remaining as vampires_remaining - 1
+    }
+    fate decrees {
+        transmute player_health as player_health - result
+    }
+
+    scribe_line("")
+}
+
+~ End game
+prophecy reveals player_health exceeds 0 {
+    scribe_line("========================================")
+    scribe_line("   VICTORY! All vampires vanquished!")
+    scribe_line("   Remaining health: " + transform_to_scroll(player_health))
+    scribe_line("========================================")
+}

@@ -1,0 +1,88 @@
+~ Network Chat Example in SlayScript
+~ Demonstrates networking with portals and owls
+~ Run this file with argument "server" or "client"
+
+~ Note: To test this, run in two terminals:
+~   Terminal 1: python -m slayscript examples/network_chat.slay
+~              Then type "server" when prompted
+~   Terminal 2: python -m slayscript examples/network_chat.slay
+~              Then type "client" when prompted
+
+scribe_line("=== SlayScript Network Chat ===")
+scribe_line("Communicate through magical portals!")
+scribe_line("")
+
+conjure mode as prophecy_input("Enter mode (server/client): ")
+
+prophecy reveals mode is "server" {
+    ~ Server mode
+    scribe_line("")
+    scribe_line("Opening the Hellmouth on port 6666...")
+    conjure hellmouth as open_hellmouth(6666)
+    scribe_line("Hellmouth opened! Awaiting visitors...")
+
+    conjure visitor as await_visitor(hellmouth)
+    conjure client_portal as visitor[0]
+    conjure client_host as visitor[1]
+    scribe_line("Visitor arrived from " + client_host)
+    scribe_line("")
+
+    ~ Chat loop
+    conjure running as true
+    patrol until running is false {
+        ~ Receive message
+        conjure incoming as receive_owl(client_portal)
+        prophecy reveals measure(incoming) is 0 {
+            scribe_line("Client disconnected.")
+            transmute running as false
+        }
+        fate decrees {
+            scribe_line(">> " + incoming)
+
+            ~ Send response
+            conjure response as prophecy_input("<< ")
+            prophecy reveals response is "quit" {
+                send_owl(client_portal, "Server closing portal. Farewell!")
+                transmute running as false
+            }
+            fate decrees {
+                send_owl(client_portal, response)
+            }
+        }
+    }
+
+    close_portal(client_portal)
+    close_portal(hellmouth)
+    scribe_line("Hellmouth sealed.")
+}
+otherwise prophecy mode is "client" {
+    ~ Client mode
+    scribe_line("")
+    scribe_line("Summoning portal to localhost:6666...")
+    conjure portal as summon_portal("localhost", 6666)
+    scribe_line("Portal opened!")
+    scribe_line("")
+
+    ~ Chat loop
+    conjure running as true
+    patrol until running is false {
+        ~ Send message
+        conjure message as prophecy_input("<< ")
+        prophecy reveals message is "quit" {
+            transmute running as false
+        }
+        fate decrees {
+            send_owl(portal, message)
+
+            ~ Receive response
+            conjure response as receive_owl(portal)
+            scribe_line(">> " + response)
+        }
+    }
+
+    close_portal(portal)
+    scribe_line("Portal closed.")
+}
+fate decrees {
+    scribe_line("Unknown mode. Use 'server' or 'client'.")
+}
