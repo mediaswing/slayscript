@@ -1,0 +1,56 @@
+~ =====================================================
+~ File I/O Demo - Ancient Scrolls Theme
+~ Demonstrates reading, writing, and managing files
+~ =====================================================
+
+scribe_line("=== Ancient Scrolls Demo ===")
+scribe_line("")
+
+~ Write a new scroll (file)
+conjure message as "In ages past, heroes walked the land.\nTheir tales live on in sacred scrolls.\nMay their wisdom guide your path."
+inscribe_scroll("legend.txt", message)
+scribe_line("A new scroll has been inscribed: legend.txt")
+
+~ Read the scroll back
+conjure contents as decipher_scroll("legend.txt")
+scribe_line("The scroll reads:")
+scribe_line(contents)
+scribe_line("")
+
+~ Append to the chronicle
+chronicle_scroll("legend.txt", "\n\n--- Additional Entry ---\nA new hero has emerged today.")
+scribe_line("Chronicle updated with new entry.")
+
+~ Read as individual lines
+conjure lines as divine_lines("legend.txt")
+scribe_line("\nTotal lines in scroll: " + transform_to_scroll(measure(lines)))
+hunt each line in lines {
+    scribe_line("  > " + line)
+}
+
+~ Check if a scroll exists
+prophecy reveals scroll_exists("legend.txt") {
+    scribe_line("\nThe scroll exists in the archives.")
+}
+
+~ Working with file handles for more control
+conjure handle as unroll_scroll("hero_log.txt", "write")
+etch_runes(handle, "Day 1: The journey begins.\n")
+etch_runes(handle, "Day 2: Encountered a mysterious stranger.\n")
+etch_runes(handle, "Day 3: Found the ancient artifact.\n")
+seal_scroll(handle)
+scribe_line("\nHero log has been written.")
+
+~ Read with handle
+conjure reader as unroll_scroll("hero_log.txt", "read")
+conjure log_contents as read_runes(reader)
+seal_scroll(reader)
+scribe_line("Hero log contents:")
+scribe_line(log_contents)
+
+~ Clean up - banish the scrolls
+banish_scroll("legend.txt")
+banish_scroll("hero_log.txt")
+scribe_line("\nScrolls have been banished from the archives.")
+
+scribe_line("\n=== Demo Complete ===")

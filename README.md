@@ -4,8 +4,9 @@
 ================================================================================
 
 A programming language inspired by Harry Potter and Buffy the Vampire Slayer,
-featuring text-to-speech, networking, HTML/CSS generation, and enterprise
-Microsoft 365 / Entra ID administration.
+featuring text-to-speech, networking, HTML/CSS generation, file I/O, MySQL
+database support, RPG gameplay mechanics, and enterprise Microsoft 365 /
+Entra ID administration.
 
 File extension: .slay
 
@@ -40,9 +41,10 @@ RUNNING THE COMPILED EXECUTABLE:
 Install dependencies with:  pip install -r requirements.txt
 
 Required:
-    - pyttsx3     Text-to-speech engine
-    - msal        Microsoft Authentication Library (for M365)
-    - requests    HTTP client (for M365)
+    - pyttsx3                   Text-to-speech engine
+    - msal                      Microsoft Authentication Library (for M365)
+    - requests                  HTTP client (for M365)
+    - mysql-connector-python    MySQL database support (for Oracle functions)
 
 For building executables:
     - pyinstaller    (installed automatically by build scripts)
@@ -153,6 +155,236 @@ UTILITIES:
     keys(dict)                      Get dictionary keys
     values(dict)                    Get dictionary values
     type_of(value)                  Get type name
+
+================================================================================
+                    FILE I/O (Ancient Scrolls Theme)
+================================================================================
+
+SlayScript provides file operations using folklore-inspired terminology,
+treating files as ancient scrolls and archives.
+
+BASIC FILE OPERATIONS:
+    inscribe_scroll(path, content)  Write content to file (overwrites)
+    chronicle_scroll(path, content) Append content to file
+    decipher_scroll(path)           Read entire file contents
+    divine_lines(path)              Read file as list of lines
+    scroll_exists(path)             Check if file exists (returns charm)
+    banish_scroll(path)             Delete a file
+
+FILE HANDLE OPERATIONS (for more control):
+    unroll_scroll(path, mode)       Open file ("read", "write", "append")
+    seal_scroll(handle)             Close an open file handle
+    read_runes(handle, [num_chars]) Read from open file handle
+    etch_runes(handle, content)     Write to open file handle
+
+EXAMPLE - Writing and reading a scroll:
+    ~ Write a new scroll
+    inscribe_scroll("legend.txt", "In ages past, heroes walked the land.")
+
+    ~ Read it back
+    conjure contents as decipher_scroll("legend.txt")
+    scribe_line(contents)
+
+    ~ Append to chronicle
+    chronicle_scroll("legend.txt", "\nA new hero emerges.")
+
+    ~ Read as lines
+    conjure lines as divine_lines("legend.txt")
+    hunt each line in lines {
+        scribe_line(line)
+    }
+
+    ~ Clean up
+    banish_scroll("legend.txt")
+
+EXAMPLE - Using file handles:
+    conjure scroll as unroll_scroll("notes.txt", "write")
+    etch_runes(scroll, "Line 1\n")
+    etch_runes(scroll, "Line 2\n")
+    seal_scroll(scroll)
+
+    conjure reader as unroll_scroll("notes.txt", "read")
+    conjure text as read_runes(reader)
+    seal_scroll(reader)
+
+================================================================================
+                    MySQL DATABASE (Oracle of Delphi Theme)
+================================================================================
+
+SlayScript provides MySQL database support using mythology-inspired terminology,
+treating database connections as consulting an ancient oracle.
+
+Requires: pip install mysql-connector-python
+
+CONNECTION:
+    awaken_oracle(host, user, password, database, [port])
+        Connect to MySQL database (default port: 3306)
+
+    dismiss_oracle(connection)
+        Close the database connection
+
+QUERYING (SELECT):
+    consult_oracle(conn, query, [params])
+        Execute SELECT, return all rows as tome of grimoires
+
+    divine_one(conn, query, [params])
+        Execute SELECT, return first row as grimoire (or void)
+
+MODIFYING (INSERT/UPDATE/DELETE):
+    decree_oracle(conn, query, [params])
+        Execute INSERT/UPDATE/DELETE, return affected row count
+
+    last_prophecy_id(connection)
+        Get the last auto-increment ID from INSERT
+
+TRANSACTIONS (Rituals):
+    begin_ritual(connection)        Start a transaction
+    complete_ritual(connection)     Commit the transaction
+    abandon_ritual(connection)      Rollback the transaction
+
+EXAMPLE - Basic database operations:
+    ~ Connect to the Oracle
+    conjure oracle as awaken_oracle("localhost", "root", "password", "mydb")
+
+    ~ Create a table
+    decree_oracle(oracle, "
+        CREATE TABLE IF NOT EXISTS heroes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100),
+            level INT
+        )
+    ")
+
+    ~ Insert with parameters (prevents SQL injection)
+    decree_oracle(oracle, "INSERT INTO heroes (name, level) VALUES (%s, %s)",
+                  tome ["Aragorn", 15])
+    conjure hero_id as last_prophecy_id(oracle)
+
+    ~ Query all heroes
+    conjure heroes as consult_oracle(oracle, "SELECT * FROM heroes")
+    hunt each hero in heroes {
+        scribe_line(hero["name"] + " - Level " + transform_to_scroll(hero["level"]))
+    }
+
+    ~ Query one hero
+    conjure mage as divine_one(oracle, "SELECT * FROM heroes WHERE name = %s",
+                               tome ["Gandalf"])
+
+    ~ Use a transaction
+    begin_ritual(oracle)
+    decree_oracle(oracle, "UPDATE heroes SET level = level + 1 WHERE level < 10")
+    complete_ritual(oracle)  ~ Or abandon_ritual(oracle) to rollback
+
+    ~ Disconnect
+    dismiss_oracle(oracle)
+
+================================================================================
+                    GAMEPLAY FEATURES (Quest/Legend Theme)
+================================================================================
+
+SlayScript includes RPG gameplay mechanics using quest and legend terminology,
+perfect for creating text adventures and games.
+
+CHARACTER CREATION:
+    forge_hero(name, [class], [level])
+        Create a hero with RPG stats. Classes: adventurer, warrior, mage,
+        rogue, ranger, cleric, paladin, bard. Returns a grimoire with:
+        name, class, level, experience, health, max_health, mana, max_mana,
+        strength, agility, wisdom, vitality, gold, inventory, equipped, alive
+
+    forge_creature(name, health, damage, [loot])
+        Create an enemy/NPC with health, damage, and optional loot tome
+
+DICE AND CHANCE:
+    roll_destiny(sides, [count], [modifier])
+        Roll dice - roll_destiny(20) for d20, roll_destiny(6, 3, 2) for 3d6+2
+
+    encounter_chance(percent)
+        Random percentage check (0-100), returns charm
+
+    choose_fate(options)
+        Randomly select one item from a tome
+
+COMBAT:
+    inflict_wound(target, damage)
+        Deal damage to hero or creature, updates health and alive status
+
+    restore_vigor(target, amount)
+        Heal a hero or creature (capped at max_health)
+
+    check_fate(target)
+        Check if hero or creature is still alive (returns charm)
+
+    claim_loot(creature)
+        Collect loot from defeated creature (must be dead)
+
+PROGRESSION:
+    gain_experience(hero, amount)
+        Award XP with automatic level-up (100 XP per level)
+        Level-up boosts all stats
+
+    bestow_artifact(hero, item)
+        Add an item to hero's inventory
+
+SAVE/LOAD:
+    saga_save(data, path)
+        Save any data (hero, game state) to JSON file
+
+    saga_load(path)
+        Load game state from JSON file
+
+EXAMPLE - Simple combat encounter:
+    ~ Create hero and monster
+    conjure hero as forge_hero("Aldric", "warrior", 1)
+    conjure goblin as forge_creature("Goblin", 30, 8, tome ["Gold Coin", "Dagger"])
+
+    scribe_line("A " + goblin["name"] + " appears!")
+
+    ~ Combat loop
+    patrol until (not check_fate(hero)) or (not check_fate(goblin)) {
+        ~ Hero attacks
+        conjure attack_roll as roll_destiny(20)
+        prophecy reveals attack_roll atleast 10 {
+            conjure damage as roll_destiny(6, 1, hero["strength"])
+            inflict_wound(goblin, damage)
+            scribe_line("Hit! Dealt " + transform_to_scroll(damage) + " damage!")
+        } fate decrees {
+            scribe_line("Miss!")
+        }
+
+        prophecy reveals not check_fate(goblin) {
+            break
+        }
+
+        ~ Goblin attacks
+        prophecy reveals roll_destiny(20) atleast 12 {
+            inflict_wound(hero, goblin["damage"])
+            scribe_line("Goblin strikes for " + transform_to_scroll(goblin["damage"]))
+        }
+    }
+
+    ~ Victory?
+    prophecy reveals check_fate(hero) {
+        scribe_line("Victory!")
+        conjure loot as claim_loot(goblin)
+        hunt each item in loot {
+            bestow_artifact(hero, item)
+            scribe_line("Got: " + item)
+        }
+        gain_experience(hero, 50)
+    }
+
+EXAMPLE - Save and load game:
+    conjure game_state as grimoire {
+        "hero": hero,
+        "location": "Dark Forest",
+        "chapter": 1
+    }
+    saga_save(game_state, "savegame.json")
+
+    ~ Later...
+    conjure loaded as saga_load("savegame.json")
+    scribe_line("Welcome back, " + loaded["hero"]["name"])
 
 ================================================================================
                MICROSOFT 365 / ENTRA ID ADMINISTRATION (Enterprise)
@@ -267,6 +499,9 @@ examples/network_chat.slay    Client/server networking
 examples/web_page.slay        HTML/CSS generation
 examples/tts_demo.slay        Text-to-speech features
 examples/m365_admin.slay      Microsoft 365 / Entra ID administration
+examples/file_scrolls.slay    File I/O operations (Ancient Scrolls theme)
+examples/oracle_database.slay MySQL database operations (Oracle theme)
+examples/quest_adventure.slay RPG gameplay demo with combat and save/load
 
 ================================================================================
                              ERROR MESSAGES
@@ -283,6 +518,9 @@ SlayScript uses themed error messages:
     Portal Failure!         Network error
     Voice Silenced!         Text-to-speech error
     Azure Realm Error!      Microsoft 365 / Entra ID error
+    Scroll Damaged!         File I/O error
+    Oracle Silent!          MySQL database error
+    Quest Failed!           Gameplay mechanics error
 
 ================================================================================
                             PROJECT FILES

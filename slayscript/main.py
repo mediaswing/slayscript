@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+from . import __version__
 from .lexer import Lexer
 from .parser import Parser
 from .interpreter import Interpreter
@@ -88,7 +89,7 @@ def print_ast(node, indent=0):
 
 def repl():
     """Start the interactive REPL."""
-    print("SlayScript REPL v1.0.0")
+    print(f"SlayScript REPL v{__version__}")
     print("Cast spells, slay bugs.")
     print("Type 'exit' or 'quit' to leave the Hellmouth.\n")
 
@@ -220,7 +221,7 @@ def main():
     parser.add_argument(
         "-v", "--version",
         action="version",
-        version="SlayScript 1.0.0"
+        version=f"SlayScript {__version__}"
     )
 
     args = parser.parse_args()

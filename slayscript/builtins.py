@@ -5,9 +5,10 @@ import random
 import time
 import webbrowser
 import os
+import json
 from typing import Any, List
 from .environment import BuiltinFunction
-from .errors import ForbiddenMagic, PortalFailure, VoiceSilenced
+from .errors import ForbiddenMagic, PortalFailure, VoiceSilenced, ScrollDamaged, OracleSilent, QuestFailed
 
 # Global TTS engine (lazy initialized)
 _tts_engine = None
@@ -507,6 +508,611 @@ def builtin_type_of(interpreter, args: List[Any]) -> str:
     return type_map.get(type(val), "unknown")
 
 
+# ============ File I/O Functions (Ancient Scrolls Theme) ============
+
+def builtin_unroll_scroll(interpreter, args: List[Any]):
+    """unroll_scroll(path, [mode]) - Open a file for reading or writing.
+
+    Modes: "read" (default), "write", "append"
+    Returns a file handle (scroll) for further operations.
+    """
+    if len(args) < 1 or len(args) > 2:
+        raise ForbiddenMagic("unroll_scroll requires 1-2 arguments (path, [mode])")
+    path = str(args[0])
+    mode_map = {"read": "r", "write": "w", "append": "a"}
+    mode = str(args[1]) if len(args) > 1 else "read"
+    if mode not in mode_map:
+        raise ScrollDamaged(f"Unknown scroll mode '{mode}'. Use 'read', 'write', or 'append'")
+    try:
+        return open(path, mode_map[mode], encoding='utf-8')
+    except FileNotFoundError:
+        raise ScrollDamaged(f"Scroll not found: {path}")
+    except PermissionError:
+        raise ScrollDamaged(f"Permission denied to access scroll: {path}")
+    except Exception as e:
+        raise ScrollDamaged(f"Failed to unroll scroll: {e}")
+
+
+def builtin_seal_scroll(interpreter, args: List[Any]) -> None:
+    """seal_scroll(handle) - Close an open file handle."""
+    if len(args) != 1:
+        raise ForbiddenMagic("seal_scroll requires 1 argument (handle)")
+    handle = args[0]
+    try:
+        handle.close()
+    except Exception as e:
+        raise ScrollDamaged(f"Failed to seal scroll: {e}")
+
+
+def builtin_inscribe_scroll(interpreter, args: List[Any]) -> int:
+    """inscribe_scroll(path, content) - Write content to a file (overwrites)."""
+    if len(args) != 2:
+        raise ForbiddenMagic("inscribe_scroll requires 2 arguments (path, content)")
+    path = str(args[0])
+    content = str(args[1])
+    try:
+        with open(path, 'w', encoding='utf-8') as f:
+            return f.write(content)
+    except PermissionError:
+        raise ScrollDamaged(f"Permission denied to inscribe scroll: {path}")
+    except Exception as e:
+        raise ScrollDamaged(f"Failed to inscribe scroll: {e}")
+
+
+def builtin_chronicle_scroll(interpreter, args: List[Any]) -> int:
+    """chronicle_scroll(path, content) - Append content to a file."""
+    if len(args) != 2:
+        raise ForbiddenMagic("chronicle_scroll requires 2 arguments (path, content)")
+    path = str(args[0])
+    content = str(args[1])
+    try:
+        with open(path, 'a', encoding='utf-8') as f:
+            return f.write(content)
+    except PermissionError:
+        raise ScrollDamaged(f"Permission denied to chronicle scroll: {path}")
+    except Exception as e:
+        raise ScrollDamaged(f"Failed to chronicle scroll: {e}")
+
+
+def builtin_decipher_scroll(interpreter, args: List[Any]) -> str:
+    """decipher_scroll(path) - Read entire file contents."""
+    if len(args) != 1:
+        raise ForbiddenMagic("decipher_scroll requires 1 argument (path)")
+    path = str(args[0])
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        raise ScrollDamaged(f"Scroll not found: {path}")
+    except PermissionError:
+        raise ScrollDamaged(f"Permission denied to decipher scroll: {path}")
+    except Exception as e:
+        raise ScrollDamaged(f"Failed to decipher scroll: {e}")
+
+
+def builtin_read_runes(interpreter, args: List[Any]) -> str:
+    """read_runes(handle, [num_chars]) - Read from an open file handle."""
+    if len(args) < 1 or len(args) > 2:
+        raise ForbiddenMagic("read_runes requires 1-2 arguments (handle, [num_chars])")
+    handle = args[0]
+    num_chars = int(args[1]) if len(args) > 1 else -1
+    try:
+        return handle.read(num_chars) if num_chars > 0 else handle.read()
+    except Exception as e:
+        raise ScrollDamaged(f"Failed to read runes: {e}")
+
+
+def builtin_etch_runes(interpreter, args: List[Any]) -> int:
+    """etch_runes(handle, content) - Write to an open file handle."""
+    if len(args) != 2:
+        raise ForbiddenMagic("etch_runes requires 2 arguments (handle, content)")
+    handle = args[0]
+    content = str(args[1])
+    try:
+        return handle.write(content)
+    except Exception as e:
+        raise ScrollDamaged(f"Failed to etch runes: {e}")
+
+
+def builtin_divine_lines(interpreter, args: List[Any]) -> list:
+    """divine_lines(path) - Read file as list of lines."""
+    if len(args) != 1:
+        raise ForbiddenMagic("divine_lines requires 1 argument (path)")
+    path = str(args[0])
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return f.read().splitlines()
+    except FileNotFoundError:
+        raise ScrollDamaged(f"Scroll not found: {path}")
+    except Exception as e:
+        raise ScrollDamaged(f"Failed to divine lines: {e}")
+
+
+def builtin_scroll_exists(interpreter, args: List[Any]) -> bool:
+    """scroll_exists(path) - Check if a file exists."""
+    if len(args) != 1:
+        raise ForbiddenMagic("scroll_exists requires 1 argument (path)")
+    path = str(args[0])
+    return os.path.exists(path)
+
+
+def builtin_banish_scroll(interpreter, args: List[Any]) -> bool:
+    """banish_scroll(path) - Delete a file."""
+    if len(args) != 1:
+        raise ForbiddenMagic("banish_scroll requires 1 argument (path)")
+    path = str(args[0])
+    try:
+        os.remove(path)
+        return True
+    except FileNotFoundError:
+        raise ScrollDamaged(f"Scroll not found: {path}")
+    except PermissionError:
+        raise ScrollDamaged(f"Permission denied to banish scroll: {path}")
+    except Exception as e:
+        raise ScrollDamaged(f"Failed to banish scroll: {e}")
+
+
+# ============ MySQL Functions (Oracle of Delphi Theme) ============
+
+# Global MySQL connection cache
+_mysql_connection = None
+
+
+def _get_mysql():
+    """Lazy-load MySQL connector."""
+    try:
+        import mysql.connector
+        return mysql.connector
+    except ImportError:
+        raise OracleSilent("mysql-connector-python is not installed. Run: pip install mysql-connector-python")
+
+
+def builtin_awaken_oracle(interpreter, args: List[Any]):
+    """awaken_oracle(host, user, password, database, [port]) - Connect to MySQL database.
+
+    Like consulting the Oracle of Delphi, this opens a connection to divine knowledge.
+    """
+    if len(args) < 4 or len(args) > 5:
+        raise ForbiddenMagic("awaken_oracle requires 4-5 arguments (host, user, password, database, [port])")
+    host = str(args[0])
+    user = str(args[1])
+    password = str(args[2])
+    database = str(args[3])
+    port = int(args[4]) if len(args) > 4 else 3306
+
+    mysql = _get_mysql()
+    try:
+        connection = mysql.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=database,
+            port=port
+        )
+        return connection
+    except mysql.Error as e:
+        raise OracleSilent(f"Failed to awaken oracle: {e}")
+
+
+def builtin_dismiss_oracle(interpreter, args: List[Any]) -> None:
+    """dismiss_oracle(connection) - Close the database connection."""
+    if len(args) != 1:
+        raise ForbiddenMagic("dismiss_oracle requires 1 argument (connection)")
+    connection = args[0]
+    try:
+        connection.close()
+    except Exception as e:
+        raise OracleSilent(f"Failed to dismiss oracle: {e}")
+
+
+def builtin_consult_oracle(interpreter, args: List[Any]) -> list:
+    """consult_oracle(connection, query, [params]) - Execute SELECT query and return all rows.
+
+    Seek wisdom from the oracle with a query. Returns a tome (list) of grimoires (dicts).
+    """
+    if len(args) < 2 or len(args) > 3:
+        raise ForbiddenMagic("consult_oracle requires 2-3 arguments (connection, query, [params])")
+    connection = args[0]
+    query = str(args[1])
+    params = tuple(args[2]) if len(args) > 2 and args[2] else None
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        results = cursor.fetchall()
+        cursor.close()
+        return results
+    except Exception as e:
+        raise OracleSilent(f"Oracle consultation failed: {e}")
+
+
+def builtin_divine_one(interpreter, args: List[Any]):
+    """divine_one(connection, query, [params]) - Execute SELECT and return first row.
+
+    Divine a single prophecy from the oracle.
+    """
+    if len(args) < 2 or len(args) > 3:
+        raise ForbiddenMagic("divine_one requires 2-3 arguments (connection, query, [params])")
+    connection = args[0]
+    query = str(args[1])
+    params = tuple(args[2]) if len(args) > 2 and args[2] else None
+
+    try:
+        cursor = connection.cursor(dictionary=True)
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        result = cursor.fetchone()
+        cursor.close()
+        return result
+    except Exception as e:
+        raise OracleSilent(f"Divination failed: {e}")
+
+
+def builtin_decree_oracle(interpreter, args: List[Any]) -> int:
+    """decree_oracle(connection, query, [params]) - Execute INSERT/UPDATE/DELETE.
+
+    Issue a decree to modify the sacred records. Returns number of affected rows.
+    """
+    if len(args) < 2 or len(args) > 3:
+        raise ForbiddenMagic("decree_oracle requires 2-3 arguments (connection, query, [params])")
+    connection = args[0]
+    query = str(args[1])
+    params = tuple(args[2]) if len(args) > 2 and args[2] else None
+
+    try:
+        cursor = connection.cursor()
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        connection.commit()
+        affected = cursor.rowcount
+        cursor.close()
+        return affected
+    except Exception as e:
+        connection.rollback()
+        raise OracleSilent(f"Oracle decree failed: {e}")
+
+
+def builtin_last_prophecy_id(interpreter, args: List[Any]) -> int:
+    """last_prophecy_id(connection) - Get the last auto-increment ID from INSERT."""
+    if len(args) != 1:
+        raise ForbiddenMagic("last_prophecy_id requires 1 argument (connection)")
+    connection = args[0]
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        result = cursor.fetchone()[0]
+        cursor.close()
+        return result
+    except Exception as e:
+        raise OracleSilent(f"Failed to retrieve last prophecy id: {e}")
+
+
+def builtin_begin_ritual(interpreter, args: List[Any]) -> None:
+    """begin_ritual(connection) - Start a database transaction."""
+    if len(args) != 1:
+        raise ForbiddenMagic("begin_ritual requires 1 argument (connection)")
+    connection = args[0]
+    try:
+        connection.start_transaction()
+    except Exception as e:
+        raise OracleSilent(f"Failed to begin ritual: {e}")
+
+
+def builtin_complete_ritual(interpreter, args: List[Any]) -> None:
+    """complete_ritual(connection) - Commit the current transaction."""
+    if len(args) != 1:
+        raise ForbiddenMagic("complete_ritual requires 1 argument (connection)")
+    connection = args[0]
+    try:
+        connection.commit()
+    except Exception as e:
+        raise OracleSilent(f"Failed to complete ritual: {e}")
+
+
+def builtin_abandon_ritual(interpreter, args: List[Any]) -> None:
+    """abandon_ritual(connection) - Rollback the current transaction."""
+    if len(args) != 1:
+        raise ForbiddenMagic("abandon_ritual requires 1 argument (connection)")
+    connection = args[0]
+    try:
+        connection.rollback()
+    except Exception as e:
+        raise OracleSilent(f"Failed to abandon ritual: {e}")
+
+
+# ============ Gameplay Functions (Quest/Legend Theme) ============
+
+
+def builtin_forge_hero(interpreter, args: List[Any]) -> dict:
+    """forge_hero(name, [class], [level]) - Create a new hero/player character.
+
+    Forge a legendary hero with base stats inspired by classic RPGs.
+    """
+    if len(args) < 1 or len(args) > 3:
+        raise ForbiddenMagic("forge_hero requires 1-3 arguments (name, [class], [level])")
+    name = str(args[0])
+    hero_class = str(args[1]) if len(args) > 1 else "adventurer"
+    level = int(args[2]) if len(args) > 2 else 1
+
+    # Base stats vary by class (inspired by classic RPG archetypes)
+    class_stats = {
+        "adventurer": {"strength": 10, "agility": 10, "wisdom": 10, "vitality": 10},
+        "warrior": {"strength": 14, "agility": 8, "wisdom": 6, "vitality": 12},
+        "mage": {"strength": 6, "agility": 8, "wisdom": 14, "vitality": 8},
+        "rogue": {"strength": 8, "agility": 14, "wisdom": 8, "vitality": 8},
+        "ranger": {"strength": 10, "agility": 12, "wisdom": 10, "vitality": 8},
+        "cleric": {"strength": 8, "agility": 6, "wisdom": 14, "vitality": 10},
+        "paladin": {"strength": 12, "agility": 6, "wisdom": 10, "vitality": 12},
+        "bard": {"strength": 8, "agility": 10, "wisdom": 12, "vitality": 8},
+    }
+
+    base = class_stats.get(hero_class.lower(), class_stats["adventurer"])
+
+    # Calculate derived stats
+    max_health = base["vitality"] * 10 + (level - 1) * 5
+    max_mana = base["wisdom"] * 5 + (level - 1) * 3
+
+    return {
+        "name": name,
+        "class": hero_class.lower(),
+        "level": level,
+        "experience": 0,
+        "health": max_health,
+        "max_health": max_health,
+        "mana": max_mana,
+        "max_mana": max_mana,
+        "strength": base["strength"],
+        "agility": base["agility"],
+        "wisdom": base["wisdom"],
+        "vitality": base["vitality"],
+        "gold": 100,
+        "inventory": [],
+        "equipped": {},
+        "alive": True
+    }
+
+
+def builtin_forge_creature(interpreter, args: List[Any]) -> dict:
+    """forge_creature(name, health, damage, [loot]) - Create an enemy/NPC.
+
+    Summon a creature from the mythic bestiary.
+    """
+    if len(args) < 3 or len(args) > 4:
+        raise ForbiddenMagic("forge_creature requires 3-4 arguments (name, health, damage, [loot])")
+    name = str(args[0])
+    health = int(args[1])
+    damage = int(args[2])
+    loot = args[3] if len(args) > 3 else []
+
+    return {
+        "name": name,
+        "health": health,
+        "max_health": health,
+        "damage": damage,
+        "loot": loot if isinstance(loot, list) else [loot],
+        "alive": True
+    }
+
+
+def builtin_roll_destiny(interpreter, args: List[Any]) -> int:
+    """roll_destiny(sides, [count], [modifier]) - Roll dice (like fate's hand).
+
+    Roll the dice of destiny! Examples: roll_destiny(20) for d20, roll_destiny(6, 3) for 3d6.
+    """
+    if len(args) < 1 or len(args) > 3:
+        raise ForbiddenMagic("roll_destiny requires 1-3 arguments (sides, [count], [modifier])")
+    sides = int(args[0])
+    count = int(args[1]) if len(args) > 1 else 1
+    modifier = int(args[2]) if len(args) > 2 else 0
+
+    if sides < 1:
+        raise QuestFailed("Dice must have at least 1 side")
+    if count < 1:
+        raise QuestFailed("Must roll at least 1 die")
+
+    total = sum(random.randint(1, sides) for _ in range(count))
+    return total + modifier
+
+
+def builtin_inflict_wound(interpreter, args: List[Any]) -> dict:
+    """inflict_wound(target, damage) - Deal damage to a creature or hero.
+
+    The cruel hand of fate strikes! Returns the updated target.
+    """
+    if len(args) != 2:
+        raise ForbiddenMagic("inflict_wound requires 2 arguments (target, damage)")
+    target = args[0]
+    damage = int(args[1])
+
+    if not isinstance(target, dict) or "health" not in target:
+        raise QuestFailed("Target must be a hero or creature with health")
+
+    target["health"] = max(0, target["health"] - damage)
+    if target["health"] <= 0:
+        target["alive"] = False
+
+    return target
+
+
+def builtin_restore_vigor(interpreter, args: List[Any]) -> dict:
+    """restore_vigor(target, amount) - Heal a creature or hero.
+
+    The blessing of restoration flows! Returns the updated target.
+    """
+    if len(args) != 2:
+        raise ForbiddenMagic("restore_vigor requires 2 arguments (target, amount)")
+    target = args[0]
+    amount = int(args[1])
+
+    if not isinstance(target, dict) or "health" not in target:
+        raise QuestFailed("Target must be a hero or creature with health")
+
+    max_health = target.get("max_health", target["health"])
+    target["health"] = min(max_health, target["health"] + amount)
+    if target["health"] > 0:
+        target["alive"] = True
+
+    return target
+
+
+def builtin_bestow_artifact(interpreter, args: List[Any]) -> dict:
+    """bestow_artifact(hero, item) - Add an item to hero's inventory.
+
+    A legendary artifact joins your quest!
+    """
+    if len(args) != 2:
+        raise ForbiddenMagic("bestow_artifact requires 2 arguments (hero, item)")
+    hero = args[0]
+    item = args[1]
+
+    if not isinstance(hero, dict) or "inventory" not in hero:
+        raise QuestFailed("First argument must be a hero with an inventory")
+
+    hero["inventory"].append(item)
+    return hero
+
+
+def builtin_claim_loot(interpreter, args: List[Any]) -> list:
+    """claim_loot(creature) - Collect loot from a defeated creature.
+
+    Claim the spoils of victory!
+    """
+    if len(args) != 1:
+        raise ForbiddenMagic("claim_loot requires 1 argument (creature)")
+    creature = args[0]
+
+    if not isinstance(creature, dict):
+        raise QuestFailed("Argument must be a creature")
+
+    if creature.get("alive", True):
+        raise QuestFailed("Cannot loot a living creature!")
+
+    loot = creature.get("loot", [])
+    creature["loot"] = []  # Loot can only be claimed once
+    return loot
+
+
+def builtin_check_fate(interpreter, args: List[Any]) -> bool:
+    """check_fate(target) - Check if a hero or creature is still alive."""
+    if len(args) != 1:
+        raise ForbiddenMagic("check_fate requires 1 argument (target)")
+    target = args[0]
+
+    if not isinstance(target, dict):
+        raise QuestFailed("Argument must be a hero or creature")
+
+    return target.get("alive", target.get("health", 0) > 0)
+
+
+def builtin_gain_experience(interpreter, args: List[Any]) -> dict:
+    """gain_experience(hero, amount) - Award experience points to hero.
+
+    Your deeds echo through legend! Returns updated hero with possible level up.
+    """
+    if len(args) != 2:
+        raise ForbiddenMagic("gain_experience requires 2 arguments (hero, amount)")
+    hero = args[0]
+    amount = int(args[1])
+
+    if not isinstance(hero, dict) or "experience" not in hero:
+        raise QuestFailed("First argument must be a hero")
+
+    hero["experience"] += amount
+
+    # Simple level-up formula: 100 XP per level
+    xp_for_next = hero["level"] * 100
+    while hero["experience"] >= xp_for_next:
+        hero["experience"] -= xp_for_next
+        hero["level"] += 1
+        # Boost stats on level up
+        hero["max_health"] += 5
+        hero["health"] = hero["max_health"]
+        hero["max_mana"] += 3
+        hero["mana"] = hero["max_mana"]
+        hero["strength"] += 1
+        hero["agility"] += 1
+        hero["wisdom"] += 1
+        hero["vitality"] += 1
+        xp_for_next = hero["level"] * 100
+
+    return hero
+
+
+def builtin_saga_save(interpreter, args: List[Any]) -> bool:
+    """saga_save(data, path) - Save game state to a JSON file.
+
+    Chronicle your saga for future generations!
+    """
+    if len(args) != 2:
+        raise ForbiddenMagic("saga_save requires 2 arguments (data, path)")
+    data = args[0]
+    path = str(args[1])
+
+    try:
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+        return True
+    except Exception as e:
+        raise QuestFailed(f"Failed to save saga: {e}")
+
+
+def builtin_saga_load(interpreter, args: List[Any]):
+    """saga_load(path) - Load game state from a JSON file.
+
+    Resume your legendary quest!
+    """
+    if len(args) != 1:
+        raise ForbiddenMagic("saga_load requires 1 argument (path)")
+    path = str(args[0])
+
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        raise QuestFailed(f"Saga not found: {path}")
+    except json.JSONDecodeError as e:
+        raise QuestFailed(f"Saga is corrupted: {e}")
+    except Exception as e:
+        raise QuestFailed(f"Failed to load saga: {e}")
+
+
+def builtin_encounter_chance(interpreter, args: List[Any]) -> bool:
+    """encounter_chance(percent) - Random chance check (0-100).
+
+    Will fate favor your quest? Returns true if the check succeeds.
+    """
+    if len(args) != 1:
+        raise ForbiddenMagic("encounter_chance requires 1 argument (percent)")
+    percent = float(args[0])
+
+    if percent < 0 or percent > 100:
+        raise QuestFailed("Percent must be between 0 and 100")
+
+    return random.random() * 100 < percent
+
+
+def builtin_choose_fate(interpreter, args: List[Any]):
+    """choose_fate(options) - Randomly select from a list of options.
+
+    Let destiny choose your path!
+    """
+    if len(args) != 1:
+        raise ForbiddenMagic("choose_fate requires 1 argument (options)")
+    options = args[0]
+
+    if not isinstance(options, list) or len(options) == 0:
+        raise QuestFailed("Options must be a non-empty tome (list)")
+
+    return random.choice(options)
+
+
 # ============ Register All Builtins ============
 
 def register_builtins(environment):
@@ -555,6 +1161,44 @@ def register_builtins(environment):
         ("keys", builtin_keys, 1),
         ("values", builtin_values, 1),
         ("type_of", builtin_type_of, 1),
+
+        # File I/O (Ancient Scrolls Theme)
+        ("unroll_scroll", builtin_unroll_scroll, -1),
+        ("seal_scroll", builtin_seal_scroll, 1),
+        ("inscribe_scroll", builtin_inscribe_scroll, 2),
+        ("chronicle_scroll", builtin_chronicle_scroll, 2),
+        ("decipher_scroll", builtin_decipher_scroll, 1),
+        ("read_runes", builtin_read_runes, -1),
+        ("etch_runes", builtin_etch_runes, 2),
+        ("divine_lines", builtin_divine_lines, 1),
+        ("scroll_exists", builtin_scroll_exists, 1),
+        ("banish_scroll", builtin_banish_scroll, 1),
+
+        # MySQL (Oracle of Delphi Theme)
+        ("awaken_oracle", builtin_awaken_oracle, -1),
+        ("dismiss_oracle", builtin_dismiss_oracle, 1),
+        ("consult_oracle", builtin_consult_oracle, -1),
+        ("divine_one", builtin_divine_one, -1),
+        ("decree_oracle", builtin_decree_oracle, -1),
+        ("last_prophecy_id", builtin_last_prophecy_id, 1),
+        ("begin_ritual", builtin_begin_ritual, 1),
+        ("complete_ritual", builtin_complete_ritual, 1),
+        ("abandon_ritual", builtin_abandon_ritual, 1),
+
+        # Gameplay (Quest/Legend Theme)
+        ("forge_hero", builtin_forge_hero, -1),
+        ("forge_creature", builtin_forge_creature, -1),
+        ("roll_destiny", builtin_roll_destiny, -1),
+        ("inflict_wound", builtin_inflict_wound, 2),
+        ("restore_vigor", builtin_restore_vigor, 2),
+        ("bestow_artifact", builtin_bestow_artifact, 2),
+        ("claim_loot", builtin_claim_loot, 1),
+        ("check_fate", builtin_check_fate, 1),
+        ("gain_experience", builtin_gain_experience, 2),
+        ("saga_save", builtin_saga_save, 2),
+        ("saga_load", builtin_saga_load, 1),
+        ("encounter_chance", builtin_encounter_chance, 1),
+        ("choose_fate", builtin_choose_fate, 1),
     ]
 
     for name, func, arity in builtins:

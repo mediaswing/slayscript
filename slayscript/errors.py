@@ -85,12 +85,16 @@ class VoiceSilenced(SlayScriptError):
 
 class SlayerInterrupt(SlayScriptError):
     """Break statement signal (internal use)."""
-    pass
+
+    def __init__(self):
+        super().__init__("Break from loop")
 
 
 class PatrolContinue(SlayScriptError):
     """Continue statement signal (internal use)."""
-    pass
+
+    def __init__(self):
+        super().__init__("Continue in loop")
 
 
 class SpellReturn(SlayScriptError):
@@ -99,3 +103,27 @@ class SpellReturn(SlayScriptError):
     def __init__(self, value=None):
         self.value = value
         super().__init__("Return from spell")
+
+
+class ScrollDamaged(SlayScriptError):
+    """File I/O error - the scroll could not be read or written."""
+
+    def format_message(self) -> str:
+        base = super().format_message()
+        return f"Scroll Damaged! {base}"
+
+
+class OracleSilent(SlayScriptError):
+    """Database error - the oracle could not be consulted."""
+
+    def format_message(self) -> str:
+        base = super().format_message()
+        return f"Oracle Silent! {base}"
+
+
+class QuestFailed(SlayScriptError):
+    """Gameplay error - the quest encountered an obstacle."""
+
+    def format_message(self) -> str:
+        base = super().format_message()
+        return f"Quest Failed! {base}"

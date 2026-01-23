@@ -1,0 +1,100 @@
+~ =====================================================
+~ MySQL Demo - Oracle of Delphi Theme
+~ Demonstrates database operations with MySQL
+~ =====================================================
+~ Note: Requires mysql-connector-python to be installed
+~ pip install mysql-connector-python
+
+scribe_line("=== Oracle of Delphi Database Demo ===")
+scribe_line("")
+
+~ Connection details (replace with your MySQL credentials)
+conjure host as "localhost"
+conjure user as "root"
+conjure password as "your_password"
+conjure database as "slayscript_demo"
+
+~ Awaken the Oracle (connect to database)
+scribe_line("Awakening the Oracle...")
+conjure oracle as awaken_oracle(host, user, password, database)
+scribe_line("The Oracle speaks! Connection established.")
+scribe_line("")
+
+~ Create a table (if it doesn't exist)
+decree_oracle(oracle, "
+    CREATE TABLE IF NOT EXISTS heroes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        class VARCHAR(50) NOT NULL,
+        level INT DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+")
+scribe_line("Heroes table prepared in the sacred records.")
+
+~ Insert some heroes using parameterized queries
+conjure heroes_to_add as tome [
+    tome ["Aragorn", "ranger", 15],
+    tome ["Gandalf", "mage", 50],
+    tome ["Legolas", "ranger", 12],
+    tome ["Gimli", "warrior", 10]
+]
+
+scribe_line("Recording heroes in the sacred texts...")
+hunt each hero in heroes_to_add {
+    decree_oracle(oracle,
+        "INSERT INTO heroes (name, class, level) VALUES (%s, %s, %s)",
+        hero
+    )
+    conjure hero_id as last_prophecy_id(oracle)
+    scribe_line("  Recorded: " + hero[0] + " (ID: " + transform_to_scroll(hero_id) + ")")
+}
+scribe_line("")
+
+~ Consult the Oracle - SELECT all heroes
+scribe_line("Consulting the Oracle for all heroes...")
+conjure all_heroes as consult_oracle(oracle, "SELECT * FROM heroes ORDER BY level DESC")
+hunt each hero in all_heroes {
+    scribe_line("  " + hero["name"] + " - " + hero["class"] + " (Level " + transform_to_scroll(hero["level"]) + ")")
+}
+scribe_line("")
+
+~ Divine one - Get a single hero
+scribe_line("Divining knowledge of the greatest mage...")
+conjure mage as divine_one(oracle, "SELECT * FROM heroes WHERE class = %s LIMIT 1", tome ["mage"])
+prophecy reveals mage isnt void {
+    scribe_line("  Found: " + mage["name"] + " at level " + transform_to_scroll(mage["level"]))
+}
+scribe_line("")
+
+~ Use transactions (rituals)
+scribe_line("Beginning a sacred ritual (transaction)...")
+begin_ritual(oracle)
+
+~ Level up all rangers
+conjure affected as decree_oracle(oracle, "UPDATE heroes SET level = level + 5 WHERE class = 'ranger'")
+scribe_line("  Rangers gained 5 levels! (" + transform_to_scroll(affected) + " heroes affected)")
+
+~ Complete the ritual (commit)
+complete_ritual(oracle)
+scribe_line("Ritual completed successfully!")
+scribe_line("")
+
+~ Verify the changes
+scribe_line("Verifying the rangers' new power...")
+conjure rangers as consult_oracle(oracle, "SELECT name, level FROM heroes WHERE class = 'ranger'")
+hunt each ranger in rangers {
+    scribe_line("  " + ranger["name"] + " is now level " + transform_to_scroll(ranger["level"]))
+}
+scribe_line("")
+
+~ Clean up - remove test data
+decree_oracle(oracle, "DELETE FROM heroes")
+scribe_line("Test data purged from the sacred records.")
+
+~ Dismiss the Oracle (close connection)
+dismiss_oracle(oracle)
+scribe_line("The Oracle returns to slumber.")
+
+scribe_line("")
+scribe_line("=== Demo Complete ===")

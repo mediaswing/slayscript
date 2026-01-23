@@ -1,0 +1,165 @@
+~ =====================================================
+~ Gameplay Demo - Quest/Legend Theme
+~ Demonstrates RPG game mechanics and save/load
+~ =====================================================
+
+scribe_line("=== Legend of the Ancient Realm ===")
+scribe_line("A SlayScript RPG Adventure Demo")
+scribe_line("")
+
+~ ========== CHARACTER CREATION ==========
+scribe_line("--- Character Creation ---")
+conjure hero as forge_hero("Aldric", "paladin", 1)
+scribe_line("A hero is forged: " + hero["name"] + " the " + hero["class"])
+scribe_line("  Health: " + transform_to_scroll(hero["health"]) + "/" + transform_to_scroll(hero["max_health"]))
+scribe_line("  Mana: " + transform_to_scroll(hero["mana"]) + "/" + transform_to_scroll(hero["max_mana"]))
+scribe_line("  STR: " + transform_to_scroll(hero["strength"]) + " | AGI: " + transform_to_scroll(hero["agility"]))
+scribe_line("  WIS: " + transform_to_scroll(hero["wisdom"]) + " | VIT: " + transform_to_scroll(hero["vitality"]))
+scribe_line("")
+
+~ Give starting equipment
+bestow_artifact(hero, "Rusty Sword")
+bestow_artifact(hero, "Leather Shield")
+bestow_artifact(hero, "Health Potion")
+scribe_line("Starting equipment bestowed!")
+hunt each item in hero["inventory"] {
+    scribe_line("  - " + item)
+}
+scribe_line("")
+
+~ ========== ENCOUNTER SYSTEM ==========
+scribe_line("--- The Adventure Begins ---")
+scribe_line("")
+
+~ Create some creatures for the hero to face
+conjure goblin as forge_creature("Goblin Scout", 30, 8, tome ["Gold Coin", "Goblin Ear"])
+conjure orc as forge_creature("Orc Warrior", 60, 15, tome ["Battle Axe", "Orc Tusk"])
+conjure dragon as forge_creature("Elder Dragon", 200, 50, tome ["Dragon Scale", "Ancient Treasure", "Legendary Gem"])
+
+~ Random encounter
+scribe_line("Walking through the dark forest...")
+prophecy reveals encounter_chance(70) {
+    scribe_line("A wild " + goblin["name"] + " appears!")
+    scribe_line("")
+
+    ~ Combat loop
+    patrol until (not check_fate(hero)) or (not check_fate(goblin)) {
+        ~ Hero attacks
+        conjure hero_roll as roll_destiny(20)
+        scribe_line(hero["name"] + " rolls: " + transform_to_scroll(hero_roll))
+
+        prophecy reveals hero_roll atleast 10 {
+            conjure damage as roll_destiny(6, 1, hero["strength"])
+            inflict_wound(goblin, damage)
+            scribe_line("  Hit! Dealt " + transform_to_scroll(damage) + " damage!")
+            scribe_line("  " + goblin["name"] + " HP: " + transform_to_scroll(goblin["health"]) + "/" + transform_to_scroll(goblin["max_health"]))
+        } fate decrees {
+            scribe_line("  Miss!")
+        }
+
+        ~ Check if goblin is defeated
+        prophecy reveals not check_fate(goblin) {
+            break
+        }
+
+        ~ Goblin attacks
+        conjure enemy_roll as roll_destiny(20)
+        prophecy reveals enemy_roll atleast 12 {
+            inflict_wound(hero, goblin["damage"])
+            scribe_line(goblin["name"] + " strikes back for " + transform_to_scroll(goblin["damage"]) + " damage!")
+            scribe_line("  " + hero["name"] + " HP: " + transform_to_scroll(hero["health"]) + "/" + transform_to_scroll(hero["max_health"]))
+        } fate decrees {
+            scribe_line(goblin["name"] + " misses!")
+        }
+
+        scribe_line("")
+    }
+
+    ~ Battle outcome
+    prophecy reveals check_fate(hero) and (not check_fate(goblin)) {
+        scribe_line("Victory! The " + goblin["name"] + " has fallen!")
+
+        ~ Claim loot
+        conjure loot as claim_loot(goblin)
+        scribe_line("Loot obtained:")
+        hunt each item in loot {
+            bestow_artifact(hero, item)
+            scribe_line("  + " + item)
+        }
+
+        ~ Gain experience
+        gain_experience(hero, 50)
+        scribe_line("Gained 50 experience!")
+        scribe_line("Level: " + transform_to_scroll(hero["level"]) + " | XP: " + transform_to_scroll(hero["experience"]) + "/100")
+    } fate decrees {
+        scribe_line("The hero has fallen...")
+    }
+} fate decrees {
+    scribe_line("The forest is peaceful today. No encounters.")
+}
+
+scribe_line("")
+
+~ ========== HEALING ==========
+prophecy reveals hero["health"] under hero["max_health"] {
+    scribe_line("--- Rest and Recovery ---")
+    scribe_line("Finding a safe spot to rest...")
+    conjure heal_amount as roll_destiny(8, 2)
+    restore_vigor(hero, heal_amount)
+    scribe_line("Restored " + transform_to_scroll(heal_amount) + " health!")
+    scribe_line("Health: " + transform_to_scroll(hero["health"]) + "/" + transform_to_scroll(hero["max_health"]))
+    scribe_line("")
+}
+
+~ ========== RANDOM EVENTS ==========
+scribe_line("--- Random Event ---")
+conjure events as tome [
+    "You find a hidden cache of gold!",
+    "A traveling merchant offers wares.",
+    "You discover ancient ruins.",
+    "A mysterious stranger shares wisdom."
+]
+conjure event as choose_fate(events)
+scribe_line(event)
+scribe_line("")
+
+~ ========== SAVE/LOAD SYSTEM ==========
+scribe_line("--- Saving Your Saga ---")
+
+~ Create game state
+conjure game_state as grimoire {
+    "hero": hero,
+    "chapter": 1,
+    "location": "Dark Forest",
+    "quests_completed": 0
+}
+
+~ Save the game
+saga_save(game_state, "savegame.json")
+scribe_line("Game saved to savegame.json!")
+
+~ Load it back (demonstrating the load feature)
+conjure loaded_state as saga_load("savegame.json")
+scribe_line("Game loaded successfully!")
+scribe_line("Hero: " + loaded_state["hero"]["name"])
+scribe_line("Location: " + loaded_state["location"])
+scribe_line("Chapter: " + transform_to_scroll(loaded_state["chapter"]))
+
+~ Clean up save file
+banish_scroll("savegame.json")
+scribe_line("")
+
+~ ========== FINAL STATUS ==========
+scribe_line("=== Final Hero Status ===")
+scribe_line("Name: " + hero["name"] + " the " + hero["class"])
+scribe_line("Level: " + transform_to_scroll(hero["level"]))
+scribe_line("Health: " + transform_to_scroll(hero["health"]) + "/" + transform_to_scroll(hero["max_health"]))
+scribe_line("Gold: " + transform_to_scroll(hero["gold"]))
+scribe_line("Inventory:")
+hunt each item in hero["inventory"] {
+    scribe_line("  - " + item)
+}
+
+scribe_line("")
+scribe_line("=== Demo Complete ===")
+scribe_line("May your adventures be legendary!")
